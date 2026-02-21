@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "dante_audio_config"
+name = "dante-config"
 version = "0.1.0"
 description = "Async Python library for Dante audio networking device discovery and control"
 requires-python = ">=3.11"
@@ -22,7 +22,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/dante_client"]
+packages = ["src/dante_config"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

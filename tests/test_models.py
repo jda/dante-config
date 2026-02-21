@@ -2,8 +2,8 @@
 
 import pytest
 
-from dante_client.const import SubscriptionStatus
-from dante_client.models import (
+from dante_config.const import SubscriptionStatus
+from dante_config.models import (
     DanteChannel,
     DanteDeviceInfo,
     DanteServiceRecord,

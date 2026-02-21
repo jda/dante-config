@@ -2,8 +2,8 @@
 
 import pytest
 
-from dante_client.const import Encoding, SettingsCommand
-from dante_client.protocol.settings import (
+from dante_config.const import Encoding, SettingsCommand
+from dante_config.protocol.settings import (
     build_dante_model_query,
     build_identify,
     build_manufacturer_query,

@@ -4,8 +4,8 @@ import struct
 
 import pytest
 
-from dante_client.const import ArcCommand
-from dante_client.protocol.arc import (
+from dante_config.const import ArcCommand
+from dante_config.protocol.arc import (
     build_add_subscription,
     build_channel_count_query,
     build_device_info_query,
@@ -27,7 +27,7 @@ from dante_client.protocol.arc import (
     parse_tx_channels,
     parse_tx_friendly_names,
 )
-from dante_client.protocol.common import get_label
+from dante_config.protocol.common import get_label
 
 
 class TestArcFrameBuilders:

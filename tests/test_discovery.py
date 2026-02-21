@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from dante_client.const import SERVICE_ARC, SERVICE_CMC
-from dante_client.discovery import DanteBrowser
+from dante_config.const import SERVICE_ARC, SERVICE_CMC
+from dante_config.discovery import DanteBrowser
 
 
 class TestDanteBrowser:
@@ -15,7 +15,7 @@ class TestDanteBrowser:
     async def test_discover_returns_empty_when_no_devices(self) -> None:
         mock_zc = MagicMock()
 
-        with patch("dante_client.discovery.AsyncServiceBrowser") as mock_browser_cls:
+        with patch("dante_config.discovery.AsyncServiceBrowser") as mock_browser_cls:
             mock_browser_instance = MagicMock()
             mock_browser_instance.async_cancel = AsyncMock()
             mock_browser_cls.return_value = mock_browser_instance
@@ -32,7 +32,7 @@ class TestDanteBrowser:
         browser = DanteBrowser(MagicMock())
 
         # Simulate assembled devices directly
-        from dante_client.models import DanteDeviceInfo, DanteServiceRecord
+        from dante_config.models import DanteDeviceInfo, DanteServiceRecord
 
         device = DanteDeviceInfo(
             server_name="MyDevice.local",

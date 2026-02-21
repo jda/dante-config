@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from dante_client.client import DanteClient
-from dante_client.const import ArcCommand
-from dante_client.exceptions import DanteConnectionError, DanteTimeoutError
-from dante_client.transport import DanteUDPProtocol
+from dante_config.client import DanteClient
+from dante_config.const import ArcCommand
+from dante_config.exceptions import DanteConnectionError, DanteTimeoutError
+from dante_config.transport import DanteUDPProtocol
 
 
 def _make_arc_response(seq_id: int, payload: bytes) -> bytes:
@@ -55,7 +55,7 @@ class TestDanteClientConnection:
 
     @pytest.mark.asyncio
     async def test_connect_creates_transports(self) -> None:
-        with patch("dante_client.client.create_dante_transport") as mock_create:
+        with patch("dante_config.client.create_dante_transport") as mock_create:
             mock_transport = MagicMock()
             mock_proto = DanteUDPProtocol(8800)
             mock_create.return_value = (mock_transport, mock_proto)
@@ -68,7 +68,7 @@ class TestDanteClientConnection:
 
     @pytest.mark.asyncio
     async def test_close_cleans_up(self) -> None:
-        with patch("dante_client.client.create_dante_transport") as mock_create:
+        with patch("dante_config.client.create_dante_transport") as mock_create:
             mock_transport = MagicMock()
             mock_proto = MagicMock(spec=DanteUDPProtocol)
             mock_create.return_value = (mock_transport, mock_proto)
