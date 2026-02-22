@@ -1,12 +1,9 @@
 """Unit tests for data models."""
 
-import pytest
-
 from dante_config.const import SubscriptionStatus
 from dante_config.models import (
     DanteChannel,
     DanteDeviceInfo,
-    DanteServiceRecord,
     DanteSubscription,
 )
 

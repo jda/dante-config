@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
-from .exceptions import DanteConnectionError, DanteTimeoutError
+from .exceptions import DanteConnectionError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,4 +129,4 @@ async def create_dante_transport(
         lambda: DanteUDPProtocol(port),
         remote_addr=(host, port),
     )
-    return transport, protocol  # type: ignore[return-value]
+    return transport, protocol

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, cast
+from typing import Any
 
 from zeroconf import ServiceStateChange, Zeroconf
 from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
@@ -88,9 +88,11 @@ class DanteBrowser:
 
             ipv4 = addresses[0]
             properties = {
-                k.decode("utf-8", errors="replace"): v.decode("utf-8", errors="replace")
-                if isinstance(v, bytes)
-                else str(v)
+                k.decode("utf-8", errors="replace"): (
+                    v.decode("utf-8", errors="replace")
+                    if isinstance(v, bytes)
+                    else str(v)
+                )
                 for k, v in (info.properties or {}).items()
                 if isinstance(k, bytes)
             }

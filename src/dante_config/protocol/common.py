@@ -19,7 +19,9 @@ def random_seq_id() -> int:
     return random.randint(0, 0xFFFF)
 
 
-def build_arc_frame(command: int, args: bytes = b"", seq_id: int | None = None) -> tuple[bytes, int]:
+def build_arc_frame(
+    command: int, args: bytes = b"", seq_id: int | None = None
+) -> tuple[bytes, int]:
     """Build an ARC protocol frame (port 8800).
 
     Returns (frame_bytes, seq_id).
@@ -50,7 +52,9 @@ def build_settings_frame(
     args: bytes = b"",
 ) -> bytes:
     """Build a Settings protocol frame (port 8700)."""
-    header = struct.pack(">HBB", SETTINGS_MAGIC, 0x00, 0)  # magic + reserved + length placeholder
+    header = struct.pack(
+        ">HBB", SETTINGS_MAGIC, 0x00, 0
+    )  # magic + reserved + length placeholder
     session = struct.pack(">H", session_id)
     padding1 = b"\x00\x00"
     target_bytes = target
@@ -59,7 +63,17 @@ def build_settings_frame(
     ver = struct.pack(">H", version)
     cmd = struct.pack(">H", command)
 
-    frame = header + session + padding1 + target_bytes + padding2 + vendor + ver + cmd + args
+    frame = (
+        header
+        + session
+        + padding1
+        + target_bytes
+        + padding2
+        + vendor
+        + ver
+        + cmd
+        + args
+    )
     # Patch length byte at offset 3
     frame_bytes = bytearray(frame)
     frame_bytes[3] = len(frame_bytes)

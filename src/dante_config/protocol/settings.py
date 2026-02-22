@@ -10,7 +10,6 @@ from ..const import (
     SESSION_IDENTIFY,
     SESSION_QUERY,
     SESSION_SAMPLE_RATE,
-    SETTINGS_VENDOR,
     SettingsCommand,
     TARGET_RT_ZEROS,
     TARGET_ZEROS,
@@ -20,10 +19,10 @@ from ..const import (
 )
 from .common import build_settings_frame, mac_str_to_bytes
 
-
 # ---------------------------------------------------------------------------
 # Frame Builders
 # ---------------------------------------------------------------------------
+
 
 def build_dante_model_query(mac: str) -> bytes:
     """Build a query for the Dante model (0x0061)."""
@@ -77,10 +76,7 @@ def build_set_encoding(encoding: int) -> bytes:
 
     encoding: one of Encoding.PCM16 (0x10), PCM24 (0x18), PCM32 (0x20).
     """
-    args = (
-        b"\x00\x00\x00\x64\x00\x00\x00\x01\x00\x00\x00"
-        + struct.pack(">B", encoding)
-    )
+    args = b"\x00\x00\x00\x64\x00\x00\x00\x01\x00\x00\x00" + struct.pack(">B", encoding)
     # Pad to reach 64-byte total frame
     frame = build_settings_frame(
         command=SettingsCommand.ENCODING,
@@ -128,6 +124,7 @@ def build_set_aes67(enabled: bool, mac: str | None = None) -> bytes:
 # Response Parsers
 # ---------------------------------------------------------------------------
 
+
 def parse_dante_model(response: bytes) -> tuple[str, str]:
     """Parse Dante model from a 0x0061 response.
 
@@ -151,7 +148,9 @@ def parse_manufacturer(response: bytes) -> tuple[str, str]:
     manufacturer = ""
     model = ""
     if len(response) > 76:
-        manufacturer = response[76:].partition(b"\x00")[0].decode("utf-8", errors="replace")
+        manufacturer = (
+            response[76:].partition(b"\x00")[0].decode("utf-8", errors="replace")
+        )
     if len(response) > 204:
         model = response[204:].partition(b"\x00")[0].decode("utf-8", errors="replace")
     return manufacturer, model

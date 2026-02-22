@@ -2,7 +2,6 @@
 
 import struct
 
-import pytest
 
 from dante_config.const import ArcCommand
 from dante_config.protocol.arc import (
@@ -20,12 +19,10 @@ from dante_config.protocol.arc import (
     build_set_rx_channel_name,
     build_set_tx_channel_name,
     build_tx_channels_query,
-    build_tx_friendly_names_query,
     parse_channel_counts,
     parse_device_name,
     parse_rx_channels,
     parse_tx_channels,
-    parse_tx_friendly_names,
 )
 from dante_config.protocol.common import get_label
 
@@ -38,7 +35,7 @@ class TestArcFrameBuilders:
         assert frame[0] == 0x27  # magic
         assert frame[1] == 0xFF  # flags
         assert frame[2] == 0x00  # reserved
-        assert frame[3] == 10   # length = 0x0a
+        assert frame[3] == 10  # length = 0x0a
         assert frame[4:6] == b"\x12\x34"  # seq_id
         assert frame[6:8] == struct.pack(">H", ArcCommand.DEVICE_NAME)
         assert frame[8:10] == b"\x00\x00"
@@ -170,7 +167,7 @@ class TestArcResponseParsers:
 
         # Channel name at byte 0x38 = 56
         name_data = b"Channel01\x00"
-        response[56:56 + len(name_data)] = name_data
+        response[56 : 56 + len(name_data)] = name_data
 
         channels, sample_rate = parse_tx_channels(bytes(response), 1)
         assert 1 in channels
@@ -187,23 +184,25 @@ class TestArcResponseParsers:
 
         # Entry at byte 12: 8 fields of 2 bytes
         offset = 12
-        struct.pack_into(">H", response, offset, 1)      # channel_number = 1
-        struct.pack_into(">H", response, offset + 2, 0)   # reserved
-        struct.pack_into(">H", response, offset + 4, 0)   # info_offset
+        struct.pack_into(">H", response, offset, 1)  # channel_number = 1
+        struct.pack_into(">H", response, offset + 2, 0)  # reserved
+        struct.pack_into(">H", response, offset + 4, 0)  # info_offset
         struct.pack_into(">H", response, offset + 6, 0x0040)  # tx_channel_offset
         struct.pack_into(">H", response, offset + 8, 0x0048)  # tx_device_offset
-        struct.pack_into(">H", response, offset + 10, 0x0050) # rx_channel_offset
+        struct.pack_into(">H", response, offset + 10, 0x0050)  # rx_channel_offset
         struct.pack_into(">H", response, offset + 12, 0)  # rx_channel_status
-        struct.pack_into(">H", response, offset + 14, 9)  # subscription_status = DYNAMIC
+        struct.pack_into(
+            ">H", response, offset + 14, 9
+        )  # subscription_status = DYNAMIC
 
         # Put strings at offsets
         tx_ch = b"TX-01\x00"
         tx_dev = b"Sender\x00"
         rx_ch = b"RX-01\x00"
 
-        response[0x40:0x40 + len(tx_ch)] = tx_ch
-        response[0x48:0x48 + len(tx_dev)] = tx_dev
-        response[0x50:0x50 + len(rx_ch)] = rx_ch
+        response[0x40 : 0x40 + len(tx_ch)] = tx_ch
+        response[0x48 : 0x48 + len(tx_dev)] = tx_dev
+        response[0x50 : 0x50 + len(rx_ch)] = rx_ch
 
         channels, subs, sr = parse_rx_channels(bytes(response), "MyDevice", 1)
 
@@ -231,7 +230,7 @@ class TestArcResponseParsers:
         struct.pack_into(">H", response, offset + 14, 4)  # SUBSCRIBE_SELF
 
         response[0x40:0x46] = b"TX-01\x00"
-        response[0x48:0x4a] = b".\x00"  # loopback indicator
+        response[0x48:0x4A] = b".\x00"  # loopback indicator
         response[0x50:0x56] = b"RX-01\x00"
 
         _, subs, _ = parse_rx_channels(bytes(response), "MyDevice", 1)
@@ -244,8 +243,8 @@ class TestArcResponseParsers:
         struct.pack_into(">H", response, offset, 1)
         struct.pack_into(">H", response, offset + 2, 0)
         struct.pack_into(">H", response, offset + 4, 0)
-        struct.pack_into(">H", response, offset + 6, 0)      # no tx channel
-        struct.pack_into(">H", response, offset + 8, 0)      # no tx device
+        struct.pack_into(">H", response, offset + 6, 0)  # no tx channel
+        struct.pack_into(">H", response, offset + 8, 0)  # no tx device
         struct.pack_into(">H", response, offset + 10, 0x0050)
         struct.pack_into(">H", response, offset + 12, 0)
         struct.pack_into(">H", response, offset + 14, 0)

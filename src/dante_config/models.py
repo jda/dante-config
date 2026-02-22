@@ -10,6 +10,7 @@ from .const import SubscriptionStatus
 @dataclass
 class DanteChannel:
     """A single TX or RX audio channel."""
+
     number: int
     name: str
     channel_type: str  # "tx" or "rx"
@@ -21,6 +22,7 @@ class DanteChannel:
 @dataclass
 class DanteSubscription:
     """An audio subscription linking an RX channel to a TX channel."""
+
     rx_channel_name: str
     rx_device_name: str
     tx_channel_name: str
@@ -46,6 +48,7 @@ class DanteSubscription:
 @dataclass
 class DanteServiceRecord:
     """An mDNS service record for a Dante device."""
+
     name: str
     service_type: str
     port: int
@@ -55,6 +58,7 @@ class DanteServiceRecord:
 @dataclass
 class DanteDeviceInfo:
     """Complete state snapshot of a Dante device."""
+
     name: str = ""
     server_name: str = ""
     ipv4: str = ""

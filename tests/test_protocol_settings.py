@@ -1,8 +1,6 @@
 """Unit tests for Settings protocol frame construction and parsing."""
 
-import pytest
-
-from dante_config.const import Encoding, SettingsCommand
+from dante_config.const import Encoding
 from dante_config.protocol.settings import (
     build_dante_model_query,
     build_identify,
@@ -120,8 +118,8 @@ class TestSettingsResponseParsers:
         response = bytearray(128)
         model_id = b"DAI1\x00"
         model = b"Dante AVIO Input\x00"
-        response[43:43 + len(model_id)] = model_id
-        response[88:88 + len(model)] = model
+        response[43 : 43 + len(model_id)] = model_id
+        response[88 : 88 + len(model)] = model
 
         mid, m = parse_dante_model(bytes(response))
         assert mid == "DAI1"
@@ -139,8 +137,8 @@ class TestSettingsResponseParsers:
         response = bytearray(256)
         manufacturer = b"Audinate\x00"
         model = b"Ultimo\x00"
-        response[76:76 + len(manufacturer)] = manufacturer
-        response[204:204 + len(model)] = model
+        response[76 : 76 + len(manufacturer)] = manufacturer
+        response[204 : 204 + len(model)] = model
 
         mfr, mdl = parse_manufacturer(bytes(response))
         assert mfr == "Audinate"

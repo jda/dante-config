@@ -29,7 +29,6 @@ class TestDanteBrowser:
     @pytest.mark.asyncio
     async def test_device_assembly_from_services(self) -> None:
         """Test that services with the same server_name are grouped."""
-        browser = DanteBrowser(MagicMock())
 
         # Simulate assembled devices directly
         from dante_config.models import DanteDeviceInfo, DanteServiceRecord

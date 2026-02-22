@@ -1,8 +1,7 @@
 """Integration tests for DanteClient with mocked transport."""
 
-import asyncio
 import struct
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

@@ -38,8 +38,8 @@ class DanteClient:
         self._arc_transport, self._arc_protocol = await create_dante_transport(
             self.host, PORT_ARC
         )
-        self._settings_transport, self._settings_protocol = await create_dante_transport(
-            self.host, PORT_SETTINGS
+        self._settings_transport, self._settings_protocol = (
+            await create_dante_transport(self.host, PORT_SETTINGS)
         )
 
     async def close(self) -> None:
@@ -66,7 +66,9 @@ class DanteClient:
     ) -> bytes | None:
         if not self._arc_protocol:
             raise DanteConnectionError("Not connected")
-        return await self._arc_protocol.send_and_receive(frame, seq_id=seq_id, timeout=timeout)
+        return await self._arc_protocol.send_and_receive(
+            frame, seq_id=seq_id, timeout=timeout
+        )
 
     async def _settings_command(
         self, frame: bytes, timeout: float = 2.0
@@ -95,7 +97,9 @@ class DanteClient:
             raise DanteTimeoutError("Channel count query timed out")
         return arc.parse_channel_counts(response)
 
-    async def get_tx_channels(self, tx_count: int | None = None) -> tuple[dict[int, DanteChannel], int]:
+    async def get_tx_channels(
+        self, tx_count: int | None = None
+    ) -> tuple[dict[int, DanteChannel], int]:
         """Query all TX channels with pagination.
 
         Returns (channels_dict, sample_rate).

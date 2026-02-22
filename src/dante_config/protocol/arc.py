@@ -8,10 +8,10 @@ from ..const import ArcCommand
 from ..models import DanteChannel, DanteSubscription
 from .common import build_arc_frame, get_label
 
-
 # ---------------------------------------------------------------------------
 # Frame Builders
 # ---------------------------------------------------------------------------
+
 
 def build_device_name_query(seq_id: int | None = None) -> tuple[bytes, int]:
     """Build a query for the device name (0x1002)."""
@@ -28,19 +28,25 @@ def build_device_info_query(seq_id: int | None = None) -> tuple[bytes, int]:
     return build_arc_frame(ArcCommand.DEVICE_INFO, b"\x00\x00", seq_id)
 
 
-def build_tx_channels_query(page: int = 0, seq_id: int | None = None) -> tuple[bytes, int]:
+def build_tx_channels_query(
+    page: int = 0, seq_id: int | None = None
+) -> tuple[bytes, int]:
     """Build a query for TX channels (0x2000) with pagination."""
     pagination = _build_pagination(page)
     return build_arc_frame(ArcCommand.TX_CHANNELS, pagination, seq_id)
 
 
-def build_tx_friendly_names_query(page: int = 0, seq_id: int | None = None) -> tuple[bytes, int]:
+def build_tx_friendly_names_query(
+    page: int = 0, seq_id: int | None = None
+) -> tuple[bytes, int]:
     """Build a query for TX friendly names (0x2010) with pagination."""
     pagination = _build_pagination(page)
     return build_arc_frame(ArcCommand.TX_FRIENDLY_NAMES, pagination, seq_id)
 
 
-def build_rx_channels_query(page: int = 0, seq_id: int | None = None) -> tuple[bytes, int]:
+def build_rx_channels_query(
+    page: int = 0, seq_id: int | None = None
+) -> tuple[bytes, int]:
     """Build a query for RX channels (0x3000) with pagination."""
     pagination = _build_pagination(page)
     return build_arc_frame(ArcCommand.RX_CHANNELS, pagination, seq_id)
@@ -148,9 +154,7 @@ def build_remove_subscription(
     return build_arc_frame(ArcCommand.REMOVE_SUBSCRIPTION, args, seq_id)
 
 
-def build_set_latency(
-    latency_us: int, seq_id: int | None = None
-) -> tuple[bytes, int]:
+def build_set_latency(latency_us: int, seq_id: int | None = None) -> tuple[bytes, int]:
     """Build a command to set the device latency (0x1101).
 
     latency_us: latency in microseconds.
@@ -158,9 +162,7 @@ def build_set_latency(
     lat = struct.pack(">I", latency_us)
     args = (
         b"\x00\x00\x05\x03\x82\x05\x00\x20\x02\x11\x00\x10\x83\x01"
-        b"\x00\x24\x82\x19\x83\x01\x83\x02\x83\x06"
-        + lat
-        + lat
+        b"\x00\x24\x82\x19\x83\x01\x83\x02\x83\x06" + lat + lat
     )
     return build_arc_frame(ArcCommand.SET_LATENCY, args, seq_id)
 
@@ -168,6 +170,7 @@ def build_set_latency(
 # ---------------------------------------------------------------------------
 # Response Parsers
 # ---------------------------------------------------------------------------
+
 
 def parse_device_name(response: bytes) -> str:
     """Parse device name from a 0x1002 response."""
@@ -228,7 +231,9 @@ def parse_tx_channels(
             if o2 <= len(hex_str):
                 sample_rate = int(hex_str[o1:o2], 16)
 
-        channel_name = get_label(hex_str, channel_offset) if channel_offset != "0000" else ""
+        channel_name = (
+            get_label(hex_str, channel_offset) if channel_offset != "0000" else ""
+        )
 
         friendly = None
         if existing_friendly_names:
@@ -317,7 +322,9 @@ def parse_rx_channels(
             if o2 <= len(hex_str):
                 sample_rate = int(hex_str[o1:o2], 16)
 
-        rx_channel_name = get_label(hex_str, rx_channel_offset) if rx_channel_offset != "0000" else ""
+        rx_channel_name = (
+            get_label(hex_str, rx_channel_offset) if rx_channel_offset != "0000" else ""
+        )
 
         channels[channel_number] = DanteChannel(
             number=channel_number,
@@ -337,13 +344,15 @@ def parse_rx_channels(
             else:
                 tx_ch_name = get_label(hex_str, tx_channel_offset)
 
-            subscriptions.append(DanteSubscription(
-                rx_channel_name=rx_channel_name,
-                rx_device_name=device_name,
-                tx_channel_name=tx_ch_name,
-                tx_device_name=tx_dev_name,
-                status_code=subscription_status_code,
-            ))
+            subscriptions.append(
+                DanteSubscription(
+                    rx_channel_name=rx_channel_name,
+                    rx_device_name=device_name,
+                    tx_channel_name=tx_ch_name,
+                    tx_device_name=tx_dev_name,
+                    status_code=subscription_status_code,
+                )
+            )
 
     return channels, subscriptions, sample_rate
 
@@ -351,6 +360,7 @@ def parse_rx_channels(
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _build_pagination(page: int) -> bytes:
     """Build the 8-byte pagination argument for channel queries."""
