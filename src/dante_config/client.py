@@ -5,11 +5,21 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from .const import PORT_ARC, PORT_SETTINGS
+from .const import (
+    MULTICAST_GROUP_SETTINGS,
+    PORT_ARC,
+    PORT_SETTINGS,
+    PORT_SETTINGS_MCAST,
+)
 from .exceptions import DanteConnectionError, DanteTimeoutError
 from .models import DanteChannel, DanteDeviceInfo, DanteSubscription
 from .protocol import arc, settings
-from .transport import DanteUDPProtocol, create_dante_transport
+from .transport import (
+    DanteMulticastProtocol,
+    DanteUDPProtocol,
+    create_dante_transport,
+    create_multicast_listener,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,25 +35,47 @@ class DanteClient:
         await client.close()
     """
 
-    def __init__(self, host: str, mac_address: str | None = None) -> None:
+    def __init__(
+        self,
+        host: str,
+        mac_address: str | None = None,
+        arc_port: int | None = None,
+    ) -> None:
         self.host = host
         self.mac_address = mac_address or ""
+        self.arc_port = arc_port or PORT_ARC
         self._arc_protocol: DanteUDPProtocol | None = None
         self._settings_protocol: DanteUDPProtocol | None = None
+        self._mcast_protocol: DanteMulticastProtocol | None = None
         self._arc_transport: asyncio.DatagramTransport | None = None
         self._settings_transport: asyncio.DatagramTransport | None = None
+        self._mcast_transport: asyncio.DatagramTransport | None = None
 
     async def connect(self) -> None:
-        """Create UDP endpoints for ARC (8800) and Settings (8700)."""
+        """Create UDP endpoints for ARC, Settings (8700), and multicast (8702)."""
         self._arc_transport, self._arc_protocol = await create_dante_transport(
-            self.host, PORT_ARC
+            self.host, self.arc_port
         )
-        self._settings_transport, self._settings_protocol = (
-            await create_dante_transport(self.host, PORT_SETTINGS)
+        (
+            self._settings_transport,
+            self._settings_protocol,
+        ) = await create_dante_transport(self.host, PORT_SETTINGS)
+        (
+            self._mcast_transport,
+            self._mcast_protocol,
+        ) = await create_multicast_listener(
+            MULTICAST_GROUP_SETTINGS,
+            PORT_SETTINGS_MCAST,
+            self._settings_protocol,
+            self.host,
         )
 
     async def close(self) -> None:
         """Close all UDP endpoints."""
+        if self._mcast_protocol:
+            self._mcast_protocol.close()
+            self._mcast_protocol = None
+            self._mcast_transport = None
         if self._arc_protocol:
             self._arc_protocol.close()
             self._arc_protocol = None
@@ -165,9 +197,7 @@ class DanteClient:
 
     async def get_dante_model(self) -> tuple[str, str]:
         """Query the Dante model. Returns (model_id, model)."""
-        if not self.mac_address:
-            return "", ""
-        frame = settings.build_dante_model_query(self.mac_address)
+        frame = settings.build_dante_model_query()
         response = await self._settings_command(frame)
         if response is None:
             return "", ""
@@ -175,9 +205,7 @@ class DanteClient:
 
     async def get_manufacturer(self) -> tuple[str, str]:
         """Query the manufacturer. Returns (manufacturer, model)."""
-        if not self.mac_address:
-            return "", ""
-        frame = settings.build_manufacturer_query(self.mac_address)
+        frame = settings.build_manufacturer_query()
         response = await self._settings_command(frame)
         if response is None:
             return "", ""

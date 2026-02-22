@@ -40,21 +40,24 @@ class TestSettingsFrameBuilders:
         assert b"\xaa\xbb\xcc\xdd\xee\xff" in frame
 
     def test_dante_model_query(self) -> None:
-        frame = build_dante_model_query("001122334455")
+        frame = build_dante_model_query()
         assert len(frame) == 32
         # Session ID = 0x0fdb
         assert frame[4:6] == b"\x0f\xdb"
-        # Version = 0x0731
-        assert frame[24:26] == b"\x07\x31"
+        # Version = 0x073d
+        assert frame[24:26] == b"\x07\x3d"
         # Command = 0x0061
         assert frame[26:28] == b"\x00\x61"
-        # Target MAC
-        assert frame[8:14] == bytes.fromhex("001122334455")
+        # Target = zeros (no MAC)
+        assert frame[8:14] == b"\x00" * 6
 
     def test_manufacturer_query(self) -> None:
-        frame = build_manufacturer_query("aabbccddeeff")
+        frame = build_manufacturer_query()
         assert frame[26:28] == b"\x00\xc1"
-        assert frame[8:14] == bytes.fromhex("aabbccddeeff")
+        # Version = 0x073d
+        assert frame[24:26] == b"\x07\x3d"
+        # Target = zeros
+        assert frame[8:14] == b"\x00" * 6
 
     def test_set_sample_rate(self) -> None:
         frame = build_set_sample_rate(48000)

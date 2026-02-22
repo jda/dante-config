@@ -5,8 +5,9 @@ from __future__ import annotations
 from enum import IntEnum
 
 # --- UDP Ports ---
-PORT_ARC = 8800
+PORT_ARC = 4440
 PORT_SETTINGS = 8700
+PORT_SETTINGS_MCAST = 8702
 PORT_INFO = 8702
 
 # --- mDNS Service Types ---
@@ -19,10 +20,11 @@ DANTE_SERVICE_TYPES = [SERVICE_ARC, SERVICE_CMC, SERVICE_CHAN, SERVICE_DBC]
 
 # --- Multicast ---
 MULTICAST_GROUP_CONTROL = "224.0.0.231"
+MULTICAST_GROUP_SETTINGS = "224.0.0.231"
 
 # --- ARC Frame Constants ---
-ARC_MAGIC = 0x27
-ARC_FLAGS = 0xFF
+ARC_MAGIC = 0x28
+ARC_FLAGS = 0x09
 ARC_RESERVED = 0x00
 
 # --- Settings Frame Constants ---
@@ -75,6 +77,7 @@ SESSION_AES67 = 0x00FF
 VERSION_0731 = 0x0731
 VERSION_0727 = 0x0727
 VERSION_0734 = 0x0734
+VERSION_073D = 0x073D
 
 # --- Settings Target Patterns ---
 TARGET_RT_ZEROS = bytes.fromhex("525400000000")

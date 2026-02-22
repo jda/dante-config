@@ -123,11 +123,24 @@ def build_add_subscription(
     tx_device_name: str,
     seq_id: int | None = None,
 ) -> tuple[bytes, int]:
-    """Build a command to add a subscription (0x3010)."""
+    """Build a command to add a subscription (0x3010).
+
+    Payload layout (after 8-byte ARC header):
+      00 00 02 01 00 {ch:1B}
+      00 {tx_ch_off:1B} 00 {tx_dev_off:1B}
+      [32 zero bytes]
+      {tx_channel_name\\0} {tx_device_name\\0}
+
+    Offsets are absolute byte positions within the full frame.
+    Args prefix is 10 bytes + 32 zero bytes = 42 bytes.
+    Strings start at frame byte 8 (header) + 42 = 50.
+    """
     tx_ch_bytes = tx_channel_name.encode("utf-8")
     tx_dev_bytes = tx_device_name.encode("utf-8")
 
-    tx_ch_offset = 52  # 0x34 — fixed offset
+    # 8-byte header + 10-byte args prefix + 32 zero-byte padding = frame byte 50
+    strings_start = 8 + 10 + 32
+    tx_ch_offset = strings_start
     tx_dev_offset = tx_ch_offset + len(tx_ch_bytes) + 1  # +1 for null terminator
 
     args = (

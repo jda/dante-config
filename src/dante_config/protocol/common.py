@@ -96,8 +96,15 @@ def get_label(hex_str: str, offset_hex: str) -> str:
 
 
 def mac_str_to_bytes(mac: str) -> bytes:
-    """Convert a MAC address string (hex, with or without separators) to 6 bytes."""
+    """Convert a MAC address string (hex, with or without separators) to 6 bytes.
+
+    Accepts both MAC-48 (12 hex chars) and EUI-64 (16 hex chars) formats.
+    EUI-64 addresses (with ``fffe`` in the middle) are converted to MAC-48
+    by stripping the inserted ``fffe`` bytes.
+    """
     cleaned = mac.replace(":", "").replace("-", "").replace(".", "")
+    if len(cleaned) == 16 and cleaned[6:10].lower() == "fffe":
+        cleaned = cleaned[:6] + cleaned[10:]
     if len(cleaned) != 12:
         raise ValueError(f"Invalid MAC address: {mac}")
     return bytes.fromhex(cleaned)

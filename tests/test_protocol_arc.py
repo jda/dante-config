@@ -32,8 +32,8 @@ class TestArcFrameBuilders:
 
     def test_device_name_query_structure(self) -> None:
         frame, seq_id = build_device_name_query(seq_id=0x1234)
-        assert frame[0] == 0x27  # magic
-        assert frame[1] == 0xFF  # flags
+        assert frame[0] == 0x28  # magic
+        assert frame[1] == 0x09  # flags
         assert frame[2] == 0x00  # reserved
         assert frame[3] == 10  # length = 0x0a
         assert frame[4:6] == b"\x12\x34"  # seq_id
@@ -102,6 +102,20 @@ class TestArcFrameBuilders:
         assert frame[6:8] == struct.pack(">H", ArcCommand.ADD_SUBSCRIPTION)
         assert b"TX-01" in frame
         assert b"DeviceA" in frame
+
+        # Verify payload structure with correct frame-absolute offsets
+        # After 8-byte header: 00 00 02 01 00 {ch} 00 {tx_ch_off} 00 {tx_dev_off}
+        assert frame[8:13] == b"\x00\x00\x02\x01\x00"
+        assert frame[13] == 1  # channel number
+        # tx_ch_offset = 50 (frame byte where "TX-01" starts)
+        assert frame[15] == 50
+        # tx_dev_offset = 50 + 6 = 56
+        assert frame[17] == 56
+        # 32 zero bytes of padding
+        assert frame[18:50] == b"\x00" * 32
+        # Strings at correct frame-absolute positions
+        assert frame[50:56] == b"TX-01\x00"
+        assert frame[56:64] == b"DeviceA\x00"
 
     def test_remove_subscription(self) -> None:
         frame, seq_id = build_remove_subscription(2, seq_id=0x8888)

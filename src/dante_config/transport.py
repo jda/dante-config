@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import socket
+import struct
 from typing import Any
 
 from .exceptions import DanteConnectionError
@@ -35,7 +37,8 @@ class DanteUDPProtocol(asyncio.DatagramProtocol):
             return
 
         # ARC responses: match by seq_id (bytes 4-5)
-        if data[0] == 0x27:
+        # Accept both 0x27 (legacy) and 0x28 (current) magic bytes
+        if data[0] in (0x27, 0x28):
             seq_id = int.from_bytes(data[4:6], "big")
             future = self._pending.pop(seq_id, None)
             if future and not future.done():
@@ -128,5 +131,72 @@ async def create_dante_transport(
     transport, protocol = await loop.create_datagram_endpoint(
         lambda: DanteUDPProtocol(port),
         remote_addr=(host, port),
+    )
+    return transport, protocol
+
+
+class DanteMulticastProtocol(asyncio.DatagramProtocol):
+    """Receives multicast Settings responses and delivers to a delegate protocol."""
+
+    def __init__(self, delegate: DanteUDPProtocol, expected_host: str) -> None:
+        self.delegate = delegate
+        self.expected_host = expected_host
+        self.transport: asyncio.DatagramTransport | None = None
+
+    def connection_made(self, transport: asyncio.BaseTransport) -> None:
+        self.transport = transport  # type: ignore[assignment]
+
+    def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
+        if len(data) < 4:
+            return
+        # Only accept responses from the device we're talking to
+        if addr[0] != self.expected_host:
+            return
+        # Settings responses have 0xFFFF magic
+        if data[0] == 0xFF and data[1] == 0xFF:
+            if (
+                self.delegate._default_waiter
+                and not self.delegate._default_waiter.done()
+            ):
+                self.delegate._default_waiter.set_result(data)
+
+    def error_received(self, exc: Exception) -> None:
+        _LOGGER.debug("Multicast UDP error: %s", exc)
+
+    def connection_lost(self, exc: Exception | None) -> None:
+        pass
+
+    def close(self) -> None:
+        if self.transport:
+            self.transport.close()
+            self.transport = None
+
+
+async def create_multicast_listener(
+    group: str,
+    port: int,
+    delegate: DanteUDPProtocol,
+    expected_host: str,
+    loop: asyncio.AbstractEventLoop | None = None,
+) -> tuple[asyncio.DatagramTransport, DanteMulticastProtocol]:
+    """Create a multicast listener that delivers to a delegate protocol."""
+    if loop is None:
+        loop = asyncio.get_running_loop()
+
+    # Create a UDP socket bound to the multicast port
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    if hasattr(socket, "SO_REUSEPORT"):
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    sock.bind(("", port))
+
+    # Join the multicast group
+    mreq = struct.pack("4s4s", socket.inet_aton(group), socket.inet_aton("0.0.0.0"))
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+    sock.setblocking(False)
+
+    transport, protocol = await loop.create_datagram_endpoint(
+        lambda: DanteMulticastProtocol(delegate, expected_host),
+        sock=sock,
     )
     return transport, protocol

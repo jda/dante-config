@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from dante_config.client import DanteClient
-from dante_config.const import ArcCommand
+from dante_config.const import PORT_ARC, PORT_SETTINGS, ArcCommand
 from dante_config.exceptions import DanteConnectionError, DanteTimeoutError
-from dante_config.transport import DanteUDPProtocol
+from dante_config.transport import DanteMulticastProtocol, DanteUDPProtocol
 
 
 def _make_arc_response(seq_id: int, payload: bytes) -> bytes:
@@ -49,28 +49,67 @@ def mock_protocol() -> DanteUDPProtocol:
     return proto
 
 
+class TestDanteClientArcPort:
+    """Test arc_port parameter handling."""
+
+    def test_default_arc_port(self) -> None:
+        client = DanteClient("192.168.1.1")
+        assert client.arc_port == PORT_ARC
+
+    def test_custom_arc_port(self) -> None:
+        client = DanteClient("192.168.1.1", arc_port=5555)
+        assert client.arc_port == 5555
+
+    @pytest.mark.asyncio
+    async def test_connect_uses_custom_arc_port(self) -> None:
+        with (
+            patch("dante_config.client.create_dante_transport") as mock_create,
+            patch("dante_config.client.create_multicast_listener") as mock_mcast,
+        ):
+            mock_transport = MagicMock()
+            mock_proto = DanteUDPProtocol(8800)
+            mock_create.return_value = (mock_transport, mock_proto)
+            mock_mcast.return_value = (MagicMock(), MagicMock(spec=DanteMulticastProtocol))
+
+            client = DanteClient("192.168.1.1", arc_port=5555)
+            await client.connect()
+
+            calls = mock_create.call_args_list
+            assert calls[0].args == ("192.168.1.1", 5555)
+            assert calls[1].args == ("192.168.1.1", PORT_SETTINGS)
+
+
 class TestDanteClientConnection:
     """Test client connection lifecycle."""
 
     @pytest.mark.asyncio
     async def test_connect_creates_transports(self) -> None:
-        with patch("dante_config.client.create_dante_transport") as mock_create:
+        with (
+            patch("dante_config.client.create_dante_transport") as mock_create,
+            patch("dante_config.client.create_multicast_listener") as mock_mcast,
+        ):
             mock_transport = MagicMock()
             mock_proto = DanteUDPProtocol(8800)
             mock_create.return_value = (mock_transport, mock_proto)
+            mock_mcast.return_value = (MagicMock(), MagicMock(spec=DanteMulticastProtocol))
 
             client = DanteClient("192.168.1.1")
             await client.connect()
 
             assert client.is_connected
             assert mock_create.call_count == 2  # ARC + Settings
+            assert mock_mcast.call_count == 1  # Multicast
 
     @pytest.mark.asyncio
     async def test_close_cleans_up(self) -> None:
-        with patch("dante_config.client.create_dante_transport") as mock_create:
+        with (
+            patch("dante_config.client.create_dante_transport") as mock_create,
+            patch("dante_config.client.create_multicast_listener") as mock_mcast,
+        ):
             mock_transport = MagicMock()
             mock_proto = MagicMock(spec=DanteUDPProtocol)
             mock_create.return_value = (mock_transport, mock_proto)
+            mock_mcast.return_value = (MagicMock(), MagicMock(spec=DanteMulticastProtocol))
 
             client = DanteClient("192.168.1.1")
             await client.connect()

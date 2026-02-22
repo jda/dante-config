@@ -1,9 +1,11 @@
 """Unit tests for data models."""
 
 from dante_config.const import SubscriptionStatus
+from dante_config.const import PORT_ARC, SERVICE_ARC
 from dante_config.models import (
     DanteChannel,
     DanteDeviceInfo,
+    DanteServiceRecord,
     DanteSubscription,
 )
 
@@ -76,6 +78,17 @@ class TestDanteDeviceInfo:
         assert info.subscriptions == []
         assert info.services == {}
         assert info.is_software is False
+
+    def test_arc_port_from_service(self) -> None:
+        svc = DanteServiceRecord(
+            name="device", service_type=SERVICE_ARC, port=5555
+        )
+        info = DanteDeviceInfo(services={SERVICE_ARC: svc})
+        assert info.arc_port == 5555
+
+    def test_arc_port_default_without_services(self) -> None:
+        info = DanteDeviceInfo()
+        assert info.arc_port == PORT_ARC
 
     def test_with_channels(self) -> None:
         tx = DanteChannel(number=1, name="TX-01", channel_type="tx")

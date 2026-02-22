@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .const import SubscriptionStatus
+from .const import PORT_ARC, SERVICE_ARC, SubscriptionStatus
 
 
 @dataclass
@@ -77,3 +77,9 @@ class DanteDeviceInfo:
     subscriptions: list[DanteSubscription] = field(default_factory=list)
     services: dict[str, DanteServiceRecord] = field(default_factory=dict)
     is_software: bool = False
+
+    @property
+    def arc_port(self) -> int:
+        """Return the ARC port from mDNS services, or the default."""
+        svc = self.services.get(SERVICE_ARC)
+        return svc.port if svc is not None else PORT_ARC

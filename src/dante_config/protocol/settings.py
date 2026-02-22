@@ -16,6 +16,7 @@ from ..const import (
     VERSION_0727,
     VERSION_0731,
     VERSION_0734,
+    VERSION_073D,
 )
 from .common import build_settings_frame, mac_str_to_bytes
 
@@ -24,24 +25,24 @@ from .common import build_settings_frame, mac_str_to_bytes
 # ---------------------------------------------------------------------------
 
 
-def build_dante_model_query(mac: str) -> bytes:
+def build_dante_model_query() -> bytes:
     """Build a query for the Dante model (0x0061)."""
     return build_settings_frame(
         command=SettingsCommand.DANTE_MODEL,
         session_id=SESSION_QUERY,
-        version=VERSION_0731,
-        target=mac_str_to_bytes(mac),
+        version=VERSION_073D,
+        target=TARGET_ZEROS,
         args=b"\x00\x00\x00\x00",
     )
 
 
-def build_manufacturer_query(mac: str) -> bytes:
+def build_manufacturer_query() -> bytes:
     """Build a query for manufacturer info (0x00c1)."""
     return build_settings_frame(
         command=SettingsCommand.MANUFACTURER,
         session_id=SESSION_QUERY,
-        version=VERSION_0731,
-        target=mac_str_to_bytes(mac),
+        version=VERSION_073D,
+        target=TARGET_ZEROS,
         args=b"\x00\x00\x00\x00",
     )
 
