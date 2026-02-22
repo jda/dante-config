@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "dante-config"
 version = "0.1.0"
-description = "Async Python library for Dante audio networking device discovery and control"
+description = "Async Python library for configuration of Dante audio networking devices"
 requires-python = ">=3.11"
 license = "MIT"
 dependencies = [
