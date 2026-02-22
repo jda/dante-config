@@ -1,4 +1,4 @@
-"""ARC protocol frame builders and response parsers (port 8800)."""
+"""ARC protocol frame builders and response parsers."""
 
 from __future__ import annotations
 

@@ -22,7 +22,7 @@ def random_seq_id() -> int:
 def build_arc_frame(
     command: int, args: bytes = b"", seq_id: int | None = None
 ) -> tuple[bytes, int]:
-    """Build an ARC protocol frame (port 8800).
+    """Build an ARC protocol frame.
 
     Returns (frame_bytes, seq_id).
     """

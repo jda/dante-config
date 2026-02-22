@@ -7,8 +7,8 @@ from enum import IntEnum
 # --- UDP Ports ---
 PORT_ARC = 4440
 PORT_SETTINGS = 8700
-PORT_SETTINGS_MCAST = 8702
-PORT_INFO = 8702
+PORT_SETTINGS_MCAST = 8702  # Multicast port for settings responses
+PORT_INFO = 8702  # Same physical port as PORT_SETTINGS_MCAST; kept as separate constant for semantic clarity
 
 # --- mDNS Service Types ---
 SERVICE_ARC = "_netaudio-arc._udp.local."
@@ -19,7 +19,6 @@ SERVICE_DBC = "_netaudio-dbc._udp.local."
 DANTE_SERVICE_TYPES = [SERVICE_ARC, SERVICE_CMC, SERVICE_CHAN, SERVICE_DBC]
 
 # --- Multicast ---
-MULTICAST_GROUP_CONTROL = "224.0.0.231"
 MULTICAST_GROUP_SETTINGS = "224.0.0.231"
 
 # --- ARC Frame Constants ---
@@ -35,7 +34,7 @@ SETTINGS_VENDOR = b"Audinate"  # 0x417564696e617465
 
 
 class ArcCommand(IntEnum):
-    """ARC protocol command types (port 8800)."""
+    """ARC protocol command types (PORT_ARC)."""
 
     CHANNEL_COUNT = 0x1000
     SET_DEVICE_NAME = 0x1001

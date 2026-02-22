@@ -80,9 +80,7 @@ class TestDanteDeviceInfo:
         assert info.is_software is False
 
     def test_arc_port_from_service(self) -> None:
-        svc = DanteServiceRecord(
-            name="device", service_type=SERVICE_ARC, port=5555
-        )
+        svc = DanteServiceRecord(name="device", service_type=SERVICE_ARC, port=5555)
         info = DanteDeviceInfo(services={SERVICE_ARC: svc})
         assert info.arc_port == 5555
 

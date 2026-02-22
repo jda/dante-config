@@ -43,7 +43,7 @@ class DanteClient:
     ) -> None:
         self.host = host
         self.mac_address = mac_address or ""
-        self.arc_port = arc_port or PORT_ARC
+        self.arc_port = arc_port if arc_port is not None else PORT_ARC
         self._arc_protocol: DanteUDPProtocol | None = None
         self._settings_protocol: DanteUDPProtocol | None = None
         self._mcast_protocol: DanteMulticastProtocol | None = None

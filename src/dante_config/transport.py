@@ -18,8 +18,8 @@ DEFAULT_TIMEOUT = 2.0
 class DanteUDPProtocol(asyncio.DatagramProtocol):
     """asyncio DatagramProtocol for Dante UDP communication.
 
-    ARC (port 8800): matches responses by seq_id via pending futures.
-    Settings (port 8700): uses a single default waiter (serialized per device).
+    ARC (PORT_ARC): matches responses by seq_id via pending futures.
+    Settings (PORT_SETTINGS): uses a single default waiter (serialized per device).
     """
 
     def __init__(self, port: int) -> None:
@@ -105,6 +105,16 @@ class DanteUDPProtocol(asyncio.DatagramProtocol):
             if seq_id is not None:
                 self._pending.pop(seq_id, None)
 
+    def deliver_response(self, data: bytes) -> bool:
+        """Deliver a response to the default waiter (used by multicast delegate).
+
+        Returns True if the response was delivered, False otherwise.
+        """
+        if self._default_waiter and not self._default_waiter.done():
+            self._default_waiter.set_result(data)
+            return True
+        return False
+
     def send_only(self, frame: bytes) -> None:
         """Send a frame without waiting for a response."""
         if self.transport is None or self._closed:
@@ -138,9 +148,12 @@ async def create_dante_transport(
 class DanteMulticastProtocol(asyncio.DatagramProtocol):
     """Receives multicast Settings responses and delivers to a delegate protocol."""
 
-    def __init__(self, delegate: DanteUDPProtocol, expected_host: str) -> None:
+    def __init__(
+        self, delegate: DanteUDPProtocol, expected_host: str, mreq: bytes
+    ) -> None:
         self.delegate = delegate
         self.expected_host = expected_host
+        self._mreq = mreq
         self.transport: asyncio.DatagramTransport | None = None
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
@@ -154,11 +167,7 @@ class DanteMulticastProtocol(asyncio.DatagramProtocol):
             return
         # Settings responses have 0xFFFF magic
         if data[0] == 0xFF and data[1] == 0xFF:
-            if (
-                self.delegate._default_waiter
-                and not self.delegate._default_waiter.done()
-            ):
-                self.delegate._default_waiter.set_result(data)
+            self.delegate.deliver_response(data)
 
     def error_received(self, exc: Exception) -> None:
         _LOGGER.debug("Multicast UDP error: %s", exc)
@@ -168,6 +177,14 @@ class DanteMulticastProtocol(asyncio.DatagramProtocol):
 
     def close(self) -> None:
         if self.transport:
+            sock = self.transport.get_extra_info("socket")
+            if sock is not None:
+                try:
+                    sock.setsockopt(
+                        socket.IPPROTO_IP, socket.IP_DROP_MEMBERSHIP, self._mreq
+                    )
+                except OSError:
+                    pass
             self.transport.close()
             self.transport = None
 
@@ -196,7 +213,7 @@ async def create_multicast_listener(
     sock.setblocking(False)
 
     transport, protocol = await loop.create_datagram_endpoint(
-        lambda: DanteMulticastProtocol(delegate, expected_host),
+        lambda: DanteMulticastProtocol(delegate, expected_host, mreq),
         sock=sock,
     )
     return transport, protocol

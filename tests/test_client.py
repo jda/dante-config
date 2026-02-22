@@ -6,35 +6,35 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from dante_config.client import DanteClient
-from dante_config.const import PORT_ARC, PORT_SETTINGS, ArcCommand
+from dante_config.const import ARC_FLAGS, ARC_MAGIC, PORT_ARC, PORT_SETTINGS, ArcCommand
 from dante_config.exceptions import DanteConnectionError, DanteTimeoutError
 from dante_config.transport import DanteMulticastProtocol, DanteUDPProtocol
 
 
 def _make_arc_response(seq_id: int, payload: bytes) -> bytes:
-    """Build a mock ARC response frame."""
-    header = struct.pack(">BBBHH", 0x27, 0xFF, 0x00, 0, seq_id)
+    """Build a mock ARC response frame using current protocol values."""
+    header = struct.pack(">BBBHH", ARC_MAGIC, ARC_FLAGS, 0x00, 0, seq_id)
     frame = bytearray(header + payload)
     frame[3] = len(frame)
     return bytes(frame)
 
 
 def _make_name_response(seq_id: int, name: str) -> bytes:
-    """Build a mock device name response."""
+    """Build a mock device name response using current protocol values."""
     # Response format: 10 bytes header + name + null
     header = bytearray(10)
-    header[0] = 0x27
-    header[1] = 0xFF
+    header[0] = ARC_MAGIC
+    header[1] = ARC_FLAGS
     header[4:6] = struct.pack(">H", seq_id)
     header[6:8] = struct.pack(">H", ArcCommand.DEVICE_NAME)
     return bytes(header) + name.encode("ascii") + b"\x00"
 
 
 def _make_channel_count_response(seq_id: int, tx: int, rx: int) -> bytes:
-    """Build a mock channel count response."""
+    """Build a mock channel count response using current protocol values."""
     response = bytearray(16)
-    response[0] = 0x27
-    response[1] = 0xFF
+    response[0] = ARC_MAGIC
+    response[1] = ARC_FLAGS
     response[4:6] = struct.pack(">H", seq_id)
     response[13] = tx
     response[15] = rx
@@ -44,7 +44,7 @@ def _make_channel_count_response(seq_id: int, tx: int, rx: int) -> bytes:
 @pytest.fixture
 def mock_protocol() -> DanteUDPProtocol:
     """Create a mock protocol."""
-    proto = DanteUDPProtocol(8800)
+    proto = DanteUDPProtocol(PORT_ARC)
     proto.transport = MagicMock()
     return proto
 
@@ -67,9 +67,12 @@ class TestDanteClientArcPort:
             patch("dante_config.client.create_multicast_listener") as mock_mcast,
         ):
             mock_transport = MagicMock()
-            mock_proto = DanteUDPProtocol(8800)
+            mock_proto = DanteUDPProtocol(PORT_ARC)
             mock_create.return_value = (mock_transport, mock_proto)
-            mock_mcast.return_value = (MagicMock(), MagicMock(spec=DanteMulticastProtocol))
+            mock_mcast.return_value = (
+                MagicMock(),
+                MagicMock(spec=DanteMulticastProtocol),
+            )
 
             client = DanteClient("192.168.1.1", arc_port=5555)
             await client.connect()
@@ -89,9 +92,12 @@ class TestDanteClientConnection:
             patch("dante_config.client.create_multicast_listener") as mock_mcast,
         ):
             mock_transport = MagicMock()
-            mock_proto = DanteUDPProtocol(8800)
+            mock_proto = DanteUDPProtocol(PORT_ARC)
             mock_create.return_value = (mock_transport, mock_proto)
-            mock_mcast.return_value = (MagicMock(), MagicMock(spec=DanteMulticastProtocol))
+            mock_mcast.return_value = (
+                MagicMock(),
+                MagicMock(spec=DanteMulticastProtocol),
+            )
 
             client = DanteClient("192.168.1.1")
             await client.connect()
@@ -109,7 +115,10 @@ class TestDanteClientConnection:
             mock_transport = MagicMock()
             mock_proto = MagicMock(spec=DanteUDPProtocol)
             mock_create.return_value = (mock_transport, mock_proto)
-            mock_mcast.return_value = (MagicMock(), MagicMock(spec=DanteMulticastProtocol))
+            mock_mcast.return_value = (
+                MagicMock(),
+                MagicMock(spec=DanteMulticastProtocol),
+            )
 
             client = DanteClient("192.168.1.1")
             await client.connect()

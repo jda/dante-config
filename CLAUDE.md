@@ -24,8 +24,8 @@ Two independent UDP binary protocols communicate with each Dante device:
 
 | Protocol | Port | Module | Purpose | Response matching |
 |----------|------|--------|---------|-------------------|
-| ARC | 8800 | `protocol/arc.py` | Channels, subscriptions, device names, identification | 16-bit `seq_id` in frame header; pending dict in transport |
-| Settings | 8700 | `protocol/settings.py` | Sample rate, encoding, reboot, identify LED | Single serialized waiter in transport |
+| ARC | 4440 (`PORT_ARC`) | `protocol/arc.py` | Channels, subscriptions, device names, identification | 16-bit `seq_id` in frame header; pending dict in transport |
+| Settings | 8700 (unicast) / 8702 (multicast responses) | `protocol/settings.py` | Sample rate, encoding, reboot, identify LED | Single serialized waiter in transport; multicast listener delivers responses |
 
 ### Layer stack
 
@@ -44,7 +44,7 @@ exceptions.py                    — DanteError hierarchy (Connection, Timeout, 
 ### Wire protocol conventions
 
 - All frames are big-endian (`struct.pack(">...")`).
-- ARC frames: magic `0x27 0xFF`, length patched at byte 3, seq_id at bytes 4-5, command at bytes 6-7.
+- ARC frames: magic `0x28 0x09`, length patched at byte 3, seq_id at bytes 4-5, command at bytes 6-7. Transport also accepts legacy `0x27` magic for backward compatibility.
 - Settings frames: magic `0xFFFF`, 6-byte MAC target, "Audinate" vendor string, command at bytes 26-27.
 - Responses are parsed by hex-slicing (`response.hex()[offset:offset+n]`) — this mirrors the pointer-arithmetic style of the Dante protocol and is intentional.
 - `get_label()` dereferences null-terminated strings via hex offset fields embedded in responses (Dante's offset-pointer scheme).
