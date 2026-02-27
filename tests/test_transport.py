@@ -11,7 +11,6 @@ import pytest
 from dante_config.const import ARC_FLAGS, ARC_MAGIC, PORT_ARC
 from dante_config.transport import DanteMulticastProtocol, DanteUDPProtocol
 
-
 # ---------------------------------------------------------------------------
 # DanteUDPProtocol — backward compatibility
 # ---------------------------------------------------------------------------
