@@ -59,6 +59,17 @@ exceptions.py                    — DanteError hierarchy (Connection, Timeout, 
 - `SubscriptionStatus` IntEnum has property-based classification: `.is_connected`, `.is_error`, `.is_transient`.
 - All modules use `from __future__ import annotations`.
 
+## CLI subpackage (`cli/`)
+
+The `dante` CLI is bundled as an optional subpackage under `dante_config.cli`. It requires the `[cli]` extra (`pip install dante-config[cli]`) which pulls in `click` and `asyncclick`. Library consumers (e.g., dante-audio) don't need these dependencies.
+
+```bash
+dante --help                       # After pip install -e ".[cli]"
+python -m dante_config.cli --help  # Module invocation
+```
+
+Structure: `cli/main.py` defines the top-level asyncclick group; `cli/commands/` has five modules: `discover`, `device`, `channel`, `subscription`, `config`. An `ImportError` guard in `main.py` gives a clear message if `[cli]` deps aren't installed.
+
 ## Testing
 
 Tests use `unittest.mock` exclusively — no real network calls. Test files mirror source modules (`test_protocol_arc.py`, `test_protocol_settings.py`, `test_client.py`, `test_transport.py`, `test_discovery.py`, `test_models.py`).
