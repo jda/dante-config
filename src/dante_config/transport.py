@@ -6,7 +6,7 @@ import asyncio
 import logging
 import socket
 import struct
-from typing import Any
+
 
 from .exceptions import DanteConnectionError
 
@@ -32,7 +32,7 @@ class DanteUDPProtocol(asyncio.DatagramProtocol):
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         self.transport = transport  # type: ignore[assignment]
 
-    def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
+    def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         if len(data) < 8:
             return
 
@@ -159,7 +159,7 @@ class DanteMulticastProtocol(asyncio.DatagramProtocol):
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         self.transport = transport  # type: ignore[assignment]
 
-    def datagram_received(self, data: bytes, addr: tuple[str | Any, int]) -> None:
+    def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         if len(data) < 4:
             return
         # Only accept responses from the device we're talking to
