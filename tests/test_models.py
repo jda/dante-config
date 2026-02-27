@@ -14,27 +14,32 @@ class TestSubscriptionStatus:
     """Test SubscriptionStatus enum properties."""
 
     def test_connected_statuses(self) -> None:
+        """Verify connected statuses return True for is_connected."""
         assert SubscriptionStatus.DYNAMIC.is_connected
         assert SubscriptionStatus.STATIC.is_connected
         assert SubscriptionStatus.MANUAL.is_connected
         assert SubscriptionStatus.SUBSCRIBE_SELF.is_connected
 
     def test_error_statuses(self) -> None:
+        """Verify error statuses return True for is_error."""
         assert SubscriptionStatus.RESOLVE_FAIL.is_error
         assert SubscriptionStatus.NO_CONNECTION.is_error
         assert SubscriptionStatus.SYSTEM_FAIL.is_error
         assert SubscriptionStatus.QOS_FAIL_TX.is_error
 
     def test_transient_statuses(self) -> None:
+        """Verify transient statuses return True for is_transient."""
         assert SubscriptionStatus.NONE.is_transient
         assert SubscriptionStatus.IN_PROGRESS.is_transient
         assert SubscriptionStatus.RESOLVED.is_transient
 
     def test_not_connected(self) -> None:
+        """Verify non-connected statuses return False for is_connected."""
         assert not SubscriptionStatus.NONE.is_connected
         assert not SubscriptionStatus.RESOLVE_FAIL.is_connected
 
     def test_not_error(self) -> None:
+        """Verify non-error statuses return False for is_error."""
         assert not SubscriptionStatus.DYNAMIC.is_error
         assert not SubscriptionStatus.NONE.is_error
 
@@ -43,6 +48,7 @@ class TestDanteSubscription:
     """Test DanteSubscription model."""
 
     def test_status_property(self) -> None:
+        """Verify status property returns correct SubscriptionStatus enum."""
         sub = DanteSubscription(
             rx_channel_name="RX1",
             rx_device_name="Dev",
@@ -55,6 +61,7 @@ class TestDanteSubscription:
         assert not sub.is_error
 
     def test_unknown_status_code(self) -> None:
+        """Verify unknown status code falls back to SubscriptionStatus.NONE."""
         sub = DanteSubscription(
             rx_channel_name="RX1",
             rx_device_name="Dev",
@@ -69,26 +76,30 @@ class TestDanteDeviceInfo:
     """Test DanteDeviceInfo model."""
 
     def test_defaults(self) -> None:
+        """Verify all default values on a fresh DanteDeviceInfo."""
         info = DanteDeviceInfo()
         assert info.name == ""
         assert info.tx_count == 0
         assert info.rx_count == 0
-        assert info.tx_channels == {}
-        assert info.rx_channels == {}
-        assert info.subscriptions == []
-        assert info.services == {}
+        assert not info.tx_channels
+        assert not info.rx_channels
+        assert not info.subscriptions
+        assert not info.services
         assert info.is_software is False
 
     def test_arc_port_from_service(self) -> None:
+        """Verify arc_port is read from ARC service record."""
         svc = DanteServiceRecord(name="device", service_type=SERVICE_ARC, port=5555)
         info = DanteDeviceInfo(services={SERVICE_ARC: svc})
         assert info.arc_port == 5555
 
     def test_arc_port_default_without_services(self) -> None:
+        """Verify arc_port falls back to PORT_ARC without services."""
         info = DanteDeviceInfo()
         assert info.arc_port == PORT_ARC
 
     def test_with_channels(self) -> None:
+        """Verify channel dicts are stored correctly."""
         tx = DanteChannel(number=1, name="TX-01", channel_type="tx")
         rx = DanteChannel(number=1, name="RX-01", channel_type="rx")
         info = DanteDeviceInfo(
@@ -106,12 +117,14 @@ class TestDanteChannel:
     """Test DanteChannel model."""
 
     def test_defaults(self) -> None:
+        """Verify default channel field values."""
         ch = DanteChannel(number=1, name="Ch1", channel_type="tx")
         assert ch.friendly_name is None
         assert ch.status_code == 0
         assert ch.enabled is True
 
     def test_with_friendly_name(self) -> None:
+        """Verify friendly_name is stored correctly."""
         ch = DanteChannel(
             number=1,
             name="01",

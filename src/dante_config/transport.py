@@ -176,6 +176,7 @@ class DanteMulticastProtocol(asyncio.DatagramProtocol):
         pass
 
     def close(self) -> None:
+        """Leave the multicast group and close the transport."""
         if self.transport:
             sock = self.transport.get_extra_info("socket")
             if sock is not None:

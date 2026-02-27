@@ -5,8 +5,9 @@ from __future__ import annotations
 import json
 
 import asyncclick as click
-from dante_config import DanteBrowser
 from zeroconf.asyncio import AsyncZeroconf
+
+from dante_config import DanteBrowser
 
 
 @click.command()

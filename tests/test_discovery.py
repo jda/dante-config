@@ -1,11 +1,14 @@
 """Tests for Dante mDNS discovery with mocked zeroconf."""
 
+# pylint: disable=protected-access
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from dante_config.const import SERVICE_ARC, SERVICE_CMC
 from dante_config.discovery import DanteBrowser
+from dante_config.models import DanteDeviceInfo, DanteServiceRecord
 
 
 class TestDanteBrowser:
@@ -13,6 +16,7 @@ class TestDanteBrowser:
 
     @pytest.mark.asyncio
     async def test_discover_returns_empty_when_no_devices(self) -> None:
+        """Verify discover returns empty dict when no devices are found."""
         mock_zc = MagicMock()
 
         with patch("dante_config.discovery.AsyncServiceBrowser") as mock_browser_cls:
@@ -29,10 +33,6 @@ class TestDanteBrowser:
     @pytest.mark.asyncio
     async def test_device_assembly_from_services(self) -> None:
         """Test that services with the same server_name are grouped."""
-
-        # Simulate assembled devices directly
-        from dante_config.models import DanteDeviceInfo, DanteServiceRecord
-
         device = DanteDeviceInfo(
             server_name="MyDevice.local",
             ipv4="192.168.1.100",
@@ -57,7 +57,8 @@ class TestDanteBrowser:
         assert len(device.services) == 2
 
     def test_browser_init(self) -> None:
+        """Verify browser stores zeroconf instance and initializes empty devices."""
         mock_zc = MagicMock()
         browser = DanteBrowser(mock_zc)
         assert browser._zc is mock_zc
-        assert browser._devices == {}
+        assert not browser._devices

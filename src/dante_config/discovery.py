@@ -15,7 +15,7 @@ from .models import DanteDeviceInfo, DanteServiceRecord
 _LOGGER = logging.getLogger(__name__)
 
 
-class DanteBrowser:
+class DanteBrowser:  # pylint: disable=too-few-public-methods
     """Discovers Dante devices on the network via mDNS/Zeroconf.
 
     Accepts a `zeroconf.Zeroconf` instance — never creates its own.
@@ -55,7 +55,7 @@ class DanteBrowser:
 
     def _on_service_state_change(
         self,
-        zeroconf: Zeroconf,
+        _zeroconf: Zeroconf,
         service_type: str,
         name: str,
         state_change: ServiceStateChange,

@@ -1,5 +1,7 @@
 """Unit tests for transport layer (DanteUDPProtocol, DanteMulticastProtocol)."""
 
+# pylint: disable=protected-access
+
 from __future__ import annotations
 
 import asyncio
@@ -21,6 +23,7 @@ class TestDanteUDPProtocolMagicBytes:
 
     @pytest.mark.asyncio
     async def test_current_magic_delivers_response(self) -> None:
+        """Verify current 0x28 magic byte delivers to pending future."""
         proto = DanteUDPProtocol(PORT_ARC)
         proto.transport = MagicMock()
         loop = asyncio.get_running_loop()
@@ -36,6 +39,7 @@ class TestDanteUDPProtocolMagicBytes:
 
     @pytest.mark.asyncio
     async def test_legacy_magic_delivers_response(self) -> None:
+        """Verify legacy 0x27 magic byte delivers to pending future."""
         proto = DanteUDPProtocol(PORT_ARC)
         proto.transport = MagicMock()
         loop = asyncio.get_running_loop()
@@ -55,6 +59,7 @@ class TestDeliverResponse:
 
     @pytest.mark.asyncio
     async def test_delivers_when_waiter_present(self) -> None:
+        """Verify deliver_response sets result on default waiter."""
         proto = DanteUDPProtocol(8700)
         loop = asyncio.get_running_loop()
         future: asyncio.Future[bytes] = loop.create_future()
@@ -66,6 +71,7 @@ class TestDeliverResponse:
         assert future.result() == data
 
     def test_returns_false_when_no_waiter(self) -> None:
+        """Verify deliver_response returns False without a waiter."""
         proto = DanteUDPProtocol(8700)
         data = b"\xff\xff\x00\x20" + b"\x00" * 28
         assert proto.deliver_response(data) is False
@@ -81,6 +87,7 @@ class TestDanteMulticastProtocol:
 
     @staticmethod
     async def _make_protocol_pair() -> tuple[DanteMulticastProtocol, DanteUDPProtocol]:
+        """Create a paired multicast and delegate protocol for testing."""
         loop = asyncio.get_running_loop()
         delegate = DanteUDPProtocol(8700)
         delegate.transport = MagicMock()
@@ -93,6 +100,7 @@ class TestDanteMulticastProtocol:
 
     @pytest.mark.asyncio
     async def test_valid_settings_response_delivered(self) -> None:
+        """Verify settings response from expected host is delivered."""
         mcast, delegate = await self._make_protocol_pair()
         data = b"\xff\xff\x00\x20" + b"\x00" * 28
         mcast.datagram_received(data, ("10.8.2.25", 8702))
@@ -103,6 +111,7 @@ class TestDanteMulticastProtocol:
 
     @pytest.mark.asyncio
     async def test_wrong_source_host_dropped(self) -> None:
+        """Verify response from wrong host is ignored."""
         mcast, delegate = await self._make_protocol_pair()
         data = b"\xff\xff\x00\x20" + b"\x00" * 28
         mcast.datagram_received(data, ("10.8.2.99", 8702))
@@ -112,6 +121,7 @@ class TestDanteMulticastProtocol:
 
     @pytest.mark.asyncio
     async def test_non_settings_magic_dropped(self) -> None:
+        """Verify non-settings magic bytes are ignored."""
         mcast, delegate = await self._make_protocol_pair()
         # ARC magic, not settings
         data = b"\x28\x09\x00\x0a" + b"\x00" * 6
@@ -122,6 +132,7 @@ class TestDanteMulticastProtocol:
 
     @pytest.mark.asyncio
     async def test_short_datagram_dropped(self) -> None:
+        """Verify datagrams shorter than 4 bytes are ignored."""
         mcast, delegate = await self._make_protocol_pair()
         mcast.datagram_received(b"\xff\xff", ("10.8.2.25", 8702))
 
@@ -130,6 +141,7 @@ class TestDanteMulticastProtocol:
 
     @pytest.mark.asyncio
     async def test_no_waiter_does_not_crash(self) -> None:
+        """Verify receiving without a waiter does not raise."""
         delegate = DanteUDPProtocol(8700)
         delegate.transport = MagicMock()
         # No waiter set

@@ -24,7 +24,7 @@ from .transport import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class DanteClient:
+class DanteClient:  # pylint: disable=too-many-instance-attributes,too-many-public-methods
     """Async client for a single Dante device.
 
     Usage::
@@ -50,6 +50,15 @@ class DanteClient:
         self._arc_transport: asyncio.DatagramTransport | None = None
         self._settings_transport: asyncio.DatagramTransport | None = None
         self._mcast_transport: asyncio.DatagramTransport | None = None
+
+    async def __aenter__(self) -> DanteClient:
+        """Connect and return self for use as an async context manager."""
+        await self.connect()
+        return self
+
+    async def __aexit__(self, *exc: object) -> None:
+        """Close all UDP endpoints on context exit."""
+        await self.close()
 
     async def connect(self) -> None:
         """Create UDP endpoints for ARC, Settings (8700), and multicast (8702)."""
@@ -87,6 +96,7 @@ class DanteClient:
 
     @property
     def is_connected(self) -> bool:
+        """Return True if both ARC and Settings transports are connected."""
         return self._arc_protocol is not None and self._settings_protocol is not None
 
     # -------------------------------------------------------------------

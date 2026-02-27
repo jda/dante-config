@@ -2,4 +2,4 @@
 
 from .main import cli
 
-cli()
+cli()  # pylint: disable=no-value-for-parameter

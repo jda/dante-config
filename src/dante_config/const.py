@@ -8,7 +8,8 @@ from enum import IntEnum
 PORT_ARC = 4440
 PORT_SETTINGS = 8700
 PORT_SETTINGS_MCAST = 8702  # Multicast port for settings responses
-PORT_INFO = 8702  # Same physical port as PORT_SETTINGS_MCAST; kept as separate constant for semantic clarity
+# Same physical port as PORT_SETTINGS_MCAST; kept as separate constant for semantic clarity
+PORT_INFO = 8702
 
 # --- mDNS Service Types ---
 SERVICE_ARC = "_netaudio-arc._udp.local."
@@ -129,14 +130,17 @@ class SubscriptionStatus(IntEnum):
 
     @property
     def is_connected(self) -> bool:
+        """Return True if this status represents an active connection."""
         return self in _CONNECTED_STATUSES
 
     @property
     def is_error(self) -> bool:
+        """Return True if this status represents an error condition."""
         return self in _ERROR_STATUSES
 
     @property
     def is_transient(self) -> bool:
+        """Return True if this status represents a transient/pending state."""
         return self in _TRANSIENT_STATUSES
 
 

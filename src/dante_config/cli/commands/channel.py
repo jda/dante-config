@@ -22,9 +22,7 @@ async def channel() -> None:
 )
 async def channel_list(host: str, mac: str | None, channel_type: str) -> None:
     """List audio channels on a device."""
-    client = DanteClient(host, mac_address=mac)
-    await client.connect()
-    try:
+    async with DanteClient(host, mac_address=mac) as client:
         if channel_type in ("tx", "all"):
             tx_channels, sr = await client.get_tx_channels()
             click.echo(f"\nTX Channels (sample rate: {sr} Hz):")
@@ -34,12 +32,10 @@ async def channel_list(host: str, mac: str | None, channel_type: str) -> None:
 
         if channel_type in ("rx", "all"):
             name = await client.get_device_name()
-            rx_channels, subs, sr = await client.get_rx_channels(device_name=name)
+            rx_channels, _, sr = await client.get_rx_channels(device_name=name)
             click.echo(f"\nRX Channels (sample rate: {sr} Hz):")
             for num, ch in sorted(rx_channels.items()):
                 click.echo(f"  {num:3d}: {ch.name}")
-    finally:
-        await client.close()
 
 
 @channel.command("set-name")
@@ -51,9 +47,7 @@ async def channel_set_name(
     host: str, channel_type: str, channel_number: int, name: str
 ) -> None:
     """Set the name of a channel."""
-    client = DanteClient(host)
-    await client.connect()
-    try:
+    async with DanteClient(host) as client:
         if channel_type == "tx":
             await client.set_tx_channel_name(channel_number, name)
         else:
@@ -61,5 +55,3 @@ async def channel_set_name(
         click.echo(
             f"Channel {channel_type.upper()} {channel_number} name set to: {name}"
         )
-    finally:
-        await client.close()

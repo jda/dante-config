@@ -18,14 +18,17 @@ class TestSettingsFrameBuilders:
     """Test Settings frame construction."""
 
     def test_settings_frame_magic(self) -> None:
+        """Verify settings frames start with 0xFFFF magic."""
         frame = build_identify()
         assert frame[0:2] == b"\xff\xff"
 
     def test_settings_frame_vendor(self) -> None:
+        """Verify settings frames contain Audinate vendor string."""
         frame = build_identify()
         assert b"Audinate" in frame
 
     def test_identify_frame(self) -> None:
+        """Verify identify frame structure and fields."""
         frame = build_identify()
         assert len(frame) == 32
         # Session ID = 0x0bc8
@@ -36,10 +39,12 @@ class TestSettingsFrameBuilders:
         assert frame[28:32] == b"\x00\x00\x00\x64"
 
     def test_identify_with_mac(self) -> None:
+        """Verify identify frame includes MAC when provided."""
         frame = build_identify(mac="aabbccddeeff")
         assert b"\xaa\xbb\xcc\xdd\xee\xff" in frame
 
     def test_dante_model_query(self) -> None:
+        """Verify Dante model query frame structure."""
         frame = build_dante_model_query()
         assert len(frame) == 32
         # Session ID = 0x0fdb
@@ -52,6 +57,7 @@ class TestSettingsFrameBuilders:
         assert frame[8:14] == b"\x00" * 6
 
     def test_manufacturer_query(self) -> None:
+        """Verify manufacturer query frame structure."""
         frame = build_manufacturer_query()
         assert frame[26:28] == b"\x00\xc1"
         # Version = 0x073d
@@ -60,6 +66,7 @@ class TestSettingsFrameBuilders:
         assert frame[8:14] == b"\x00" * 6
 
     def test_set_sample_rate(self) -> None:
+        """Verify set sample rate frame for 48000 Hz."""
         frame = build_set_sample_rate(48000)
         # Session ID = 0x03d4
         assert frame[4:6] == b"\x03\xd4"
@@ -73,10 +80,12 @@ class TestSettingsFrameBuilders:
         assert b"\x00\xbb\x80" in frame
 
     def test_set_sample_rate_44100(self) -> None:
+        """Verify set sample rate frame for 44100 Hz."""
         frame = build_set_sample_rate(44100)
         assert b"\x00\xac\x44" in frame
 
     def test_set_encoding_pcm24(self) -> None:
+        """Verify set encoding frame for PCM24."""
         frame = build_set_encoding(Encoding.PCM24)
         assert len(frame) == 64  # padded to 64 bytes
         # Session ID = 0x03d7
@@ -87,14 +96,17 @@ class TestSettingsFrameBuilders:
         assert frame[39] == 0x18
 
     def test_set_encoding_pcm16(self) -> None:
+        """Verify set encoding frame for PCM16."""
         frame = build_set_encoding(Encoding.PCM16)
         assert frame[39] == 0x10
 
     def test_set_encoding_pcm32(self) -> None:
+        """Verify set encoding frame for PCM32."""
         frame = build_set_encoding(Encoding.PCM32)
         assert frame[39] == 0x20
 
     def test_reboot_frame(self) -> None:
+        """Verify reboot frame structure with MAC target."""
         frame = build_reboot("001122334455")
         assert len(frame) == 32
         assert frame[4:6] == b"\x0f\xdb"
@@ -102,6 +114,7 @@ class TestSettingsFrameBuilders:
         assert frame[8:14] == bytes.fromhex("001122334455")
 
     def test_aes67_enable(self) -> None:
+        """Verify AES67 enable frame ends with 0x01."""
         frame = build_set_aes67(True)
         # Command = 0x1006
         assert frame[26:28] == b"\x10\x06"
@@ -109,6 +122,7 @@ class TestSettingsFrameBuilders:
         assert frame[-1] == 0x01
 
     def test_aes67_disable(self) -> None:
+        """Verify AES67 disable frame ends with 0x00."""
         frame = build_set_aes67(False)
         assert frame[-1] == 0x00
 
@@ -117,6 +131,7 @@ class TestSettingsResponseParsers:
     """Test Settings response parsing."""
 
     def test_parse_dante_model(self) -> None:
+        """Verify model_id and model are parsed from correct byte offsets."""
         # Build a mock response with model_id at byte 43 and model at byte 88
         response = bytearray(128)
         model_id = b"DAI1\x00"
@@ -129,6 +144,7 @@ class TestSettingsResponseParsers:
         assert m == "Dante AVIO Input"
 
     def test_parse_dante_model_with_control_char(self) -> None:
+        """Verify control characters are stripped from parsed model."""
         response = bytearray(128)
         response[43:50] = b"\x03DAI1\x00X"
         response[88:100] = b"AVIO Input\x00X"
@@ -137,6 +153,7 @@ class TestSettingsResponseParsers:
         assert m == "AVIO Input"
 
     def test_parse_manufacturer(self) -> None:
+        """Verify manufacturer and model are parsed from correct offsets."""
         response = bytearray(256)
         manufacturer = b"Audinate\x00"
         model = b"Ultimo\x00"
@@ -148,6 +165,7 @@ class TestSettingsResponseParsers:
         assert mdl == "Ultimo"
 
     def test_parse_manufacturer_short_response(self) -> None:
+        """Verify short response returns empty strings."""
         response = bytes(50)  # Too short for both fields
         mfr, mdl = parse_manufacturer(response)
         assert mfr == ""

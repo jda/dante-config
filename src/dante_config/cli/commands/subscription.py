@@ -16,9 +16,7 @@ async def subscription() -> None:
 @click.option("--mac", default=None, help="Device MAC address (hex).")
 async def subscription_list(host: str, mac: str | None) -> None:
     """List all subscriptions on a device."""
-    client = DanteClient(host, mac_address=mac)
-    await client.connect()
-    try:
+    async with DanteClient(host, mac_address=mac) as client:
         name = await client.get_device_name()
         _, subs, _ = await client.get_rx_channels(device_name=name)
 
@@ -38,8 +36,6 @@ async def subscription_list(host: str, mac: str | None) -> None:
                 f"{sub.tx_device_name}:{sub.tx_channel_name}  "
                 f"[{status_str}]"
             )
-    finally:
-        await client.close()
 
 
 @subscription.command("add")
@@ -51,13 +47,9 @@ async def subscription_add(
     host: str, rx_channel: int, tx_channel_name: str, tx_device_name: str
 ) -> None:
     """Subscribe RX channel to a TX channel on another device."""
-    client = DanteClient(host)
-    await client.connect()
-    try:
+    async with DanteClient(host) as client:
         await client.add_subscription(rx_channel, tx_channel_name, tx_device_name)
         click.echo(f"Subscribed RX {rx_channel} to {tx_device_name}:{tx_channel_name}")
-    finally:
-        await client.close()
 
 
 @subscription.command("remove")
@@ -65,10 +57,6 @@ async def subscription_add(
 @click.argument("rx_channel", type=int)
 async def subscription_remove(host: str, rx_channel: int) -> None:
     """Remove subscription from an RX channel."""
-    client = DanteClient(host)
-    await client.connect()
-    try:
+    async with DanteClient(host) as client:
         await client.remove_subscription(rx_channel)
         click.echo(f"Removed subscription from RX {rx_channel}")
-    finally:
-        await client.close()

@@ -1,5 +1,7 @@
 """Integration tests for DanteClient with mocked transport."""
 
+# pylint: disable=protected-access
+
 import struct
 from unittest.mock import MagicMock, patch
 
@@ -53,15 +55,18 @@ class TestDanteClientArcPort:
     """Test arc_port parameter handling."""
 
     def test_default_arc_port(self) -> None:
+        """Verify default ARC port is used when not specified."""
         client = DanteClient("192.168.1.1")
         assert client.arc_port == PORT_ARC
 
     def test_custom_arc_port(self) -> None:
+        """Verify custom ARC port is stored."""
         client = DanteClient("192.168.1.1", arc_port=5555)
         assert client.arc_port == 5555
 
     @pytest.mark.asyncio
     async def test_connect_uses_custom_arc_port(self) -> None:
+        """Verify connect passes custom ARC port to transport factory."""
         with (
             patch("dante_config.client.create_dante_transport") as mock_create,
             patch("dante_config.client.create_multicast_listener") as mock_mcast,
@@ -87,6 +92,7 @@ class TestDanteClientConnection:
 
     @pytest.mark.asyncio
     async def test_connect_creates_transports(self) -> None:
+        """Verify connect creates ARC, Settings, and multicast transports."""
         with (
             patch("dante_config.client.create_dante_transport") as mock_create,
             patch("dante_config.client.create_multicast_listener") as mock_mcast,
@@ -108,6 +114,7 @@ class TestDanteClientConnection:
 
     @pytest.mark.asyncio
     async def test_close_cleans_up(self) -> None:
+        """Verify close sets is_connected to False."""
         with (
             patch("dante_config.client.create_dante_transport") as mock_create,
             patch("dante_config.client.create_multicast_listener") as mock_mcast,
@@ -128,6 +135,7 @@ class TestDanteClientConnection:
 
     @pytest.mark.asyncio
     async def test_command_without_connect_raises(self) -> None:
+        """Verify commands raise DanteConnectionError before connect."""
         client = DanteClient("192.168.1.1")
         with pytest.raises(DanteConnectionError):
             await client.get_device_name()
@@ -138,11 +146,12 @@ class TestDanteClientQueries:
 
     @pytest.mark.asyncio
     async def test_get_device_name(self) -> None:
+        """Verify get_device_name returns parsed name from mock response."""
         client = DanteClient("192.168.1.1", mac_address="001122334455")
 
         mock_proto = MagicMock(spec=DanteUDPProtocol)
 
-        async def mock_send(frame, seq_id=None, timeout=2.0):
+        async def mock_send(_frame, seq_id=None, **_kwargs):  # noqa: ARG001
             return _make_name_response(seq_id, "TestDevice")
 
         mock_proto.send_and_receive = mock_send
@@ -155,10 +164,11 @@ class TestDanteClientQueries:
 
     @pytest.mark.asyncio
     async def test_get_channel_counts(self) -> None:
+        """Verify get_channel_counts returns parsed TX and RX counts."""
         client = DanteClient("192.168.1.1")
         mock_proto = MagicMock(spec=DanteUDPProtocol)
 
-        async def mock_send(frame, seq_id=None, timeout=2.0):
+        async def mock_send(_frame, seq_id=None, **_kwargs):  # noqa: ARG001
             return _make_channel_count_response(seq_id, 8, 4)
 
         mock_proto.send_and_receive = mock_send
@@ -171,10 +181,13 @@ class TestDanteClientQueries:
 
     @pytest.mark.asyncio
     async def test_get_device_name_timeout(self) -> None:
+        """Verify DanteTimeoutError is raised on timeout."""
         client = DanteClient("192.168.1.1")
         mock_proto = MagicMock(spec=DanteUDPProtocol)
 
-        async def mock_send(frame, seq_id=None, timeout=2.0):
+        async def mock_send(  # pylint: disable=unused-argument
+            _frame, seq_id=None, **_kwargs
+        ):
             return None  # simulate timeout
 
         mock_proto.send_and_receive = mock_send
@@ -190,10 +203,11 @@ class TestDanteClientControl:
 
     @pytest.mark.asyncio
     async def test_identify(self) -> None:
+        """Verify identify command completes without error."""
         client = DanteClient("192.168.1.1", mac_address="aabbccddeeff")
         mock_settings = MagicMock(spec=DanteUDPProtocol)
 
-        async def mock_send(frame, timeout=2.0):
+        async def mock_send(_frame, **_kwargs):
             return b"\xff\xff\x00\x20"  # minimal response
 
         mock_settings.send_and_receive = mock_send
@@ -204,6 +218,7 @@ class TestDanteClientControl:
 
     @pytest.mark.asyncio
     async def test_reboot_without_mac_raises(self) -> None:
+        """Verify reboot raises DanteConnectionError without MAC."""
         client = DanteClient("192.168.1.1")
         client._arc_protocol = MagicMock(spec=DanteUDPProtocol)
         client._settings_protocol = MagicMock(spec=DanteUDPProtocol)
@@ -213,10 +228,11 @@ class TestDanteClientControl:
 
     @pytest.mark.asyncio
     async def test_add_subscription(self) -> None:
+        """Verify add_subscription sends correct ARC command."""
         client = DanteClient("192.168.1.1")
         mock_arc = MagicMock(spec=DanteUDPProtocol)
 
-        async def mock_send(frame, seq_id=None, timeout=2.0):
+        async def mock_send(_frame, seq_id=None, **_kwargs):  # noqa: ARG001
             return _make_arc_response(seq_id, b"\x00\x00")
 
         mock_arc.send_and_receive = mock_send

@@ -31,6 +31,7 @@ class DanteSubscription:
 
     @property
     def status(self) -> SubscriptionStatus:
+        """Return the subscription status as a SubscriptionStatus enum."""
         try:
             return SubscriptionStatus(self.status_code)
         except ValueError:
@@ -38,10 +39,12 @@ class DanteSubscription:
 
     @property
     def is_connected(self) -> bool:
+        """Return True if the subscription is actively connected."""
         return self.status.is_connected
 
     @property
     def is_error(self) -> bool:
+        """Return True if the subscription is in an error state."""
         return self.status.is_error
 
 
@@ -56,7 +59,7 @@ class DanteServiceRecord:
 
 
 @dataclass
-class DanteDeviceInfo:
+class DanteDeviceInfo:  # pylint: disable=too-many-instance-attributes
     """Complete state snapshot of a Dante device."""
 
     name: str = ""

@@ -31,7 +31,8 @@ class TestArcFrameBuilders:
     """Test ARC frame construction."""
 
     def test_device_name_query_structure(self) -> None:
-        frame, seq_id = build_device_name_query(seq_id=0x1234)
+        """Verify device name query frame layout."""
+        frame, _ = build_device_name_query(seq_id=0x1234)
         assert frame[0] == 0x28  # magic
         assert frame[1] == 0x09  # flags
         assert frame[2] == 0x00  # reserved
@@ -41,27 +42,32 @@ class TestArcFrameBuilders:
         assert frame[8:10] == b"\x00\x00"
 
     def test_channel_count_query(self) -> None:
-        frame, seq_id = build_channel_count_query(seq_id=0xABCD)
+        """Verify channel count query frame layout."""
+        frame, _ = build_channel_count_query(seq_id=0xABCD)
         assert frame[3] == 10
         assert frame[6:8] == struct.pack(">H", ArcCommand.CHANNEL_COUNT)
         assert int.from_bytes(frame[4:6], "big") == 0xABCD
 
     def test_device_info_query(self) -> None:
-        frame, seq_id = build_device_info_query(seq_id=0x0001)
+        """Verify device info query command byte."""
+        frame, _ = build_device_info_query(seq_id=0x0001)
         assert frame[6:8] == struct.pack(">H", ArcCommand.DEVICE_INFO)
 
     def test_tx_channels_query(self) -> None:
-        frame, seq_id = build_tx_channels_query(page=0, seq_id=0x5555)
+        """Verify TX channels query frame layout."""
+        frame, _ = build_tx_channels_query(page=0, seq_id=0x5555)
         assert frame[3] == 16  # 0x10
         assert frame[6:8] == struct.pack(">H", ArcCommand.TX_CHANNELS)
 
     def test_rx_channels_query(self) -> None:
-        frame, seq_id = build_rx_channels_query(page=0, seq_id=0x6666)
+        """Verify RX channels query frame layout."""
+        frame, _ = build_rx_channels_query(page=0, seq_id=0x6666)
         assert frame[3] == 16
         assert frame[6:8] == struct.pack(">H", ArcCommand.RX_CHANNELS)
 
     def test_set_device_name(self) -> None:
-        frame, seq_id = build_set_device_name("MyDevice", seq_id=0x1111)
+        """Verify set device name frame contains name bytes."""
+        frame, _ = build_set_device_name("MyDevice", seq_id=0x1111)
         assert frame[6:8] == struct.pack(">H", ArcCommand.SET_DEVICE_NAME)
         # Should contain the name bytes
         name_bytes = "MyDevice".encode("utf-8")
@@ -70,35 +76,41 @@ class TestArcFrameBuilders:
         assert frame[3] == len(name_bytes) + 11
 
     def test_reset_device_name(self) -> None:
-        frame, seq_id = build_reset_device_name(seq_id=0x2222)
+        """Verify reset device name frame layout."""
+        frame, _ = build_reset_device_name(seq_id=0x2222)
         assert frame[3] == 10  # 0x0a
         assert frame[6:8] == struct.pack(">H", ArcCommand.SET_DEVICE_NAME)
 
     def test_set_tx_channel_name(self) -> None:
-        frame, seq_id = build_set_tx_channel_name(1, "Out 1", seq_id=0x3333)
+        """Verify set TX channel name frame contains name and correct length."""
+        frame, _ = build_set_tx_channel_name(1, "Out 1", seq_id=0x3333)
         assert frame[6:8] == struct.pack(">H", ArcCommand.SET_TX_CHANNEL_NAME)
         assert b"Out 1" in frame
         # Length should be len(name) + 25
         assert frame[3] == len("Out 1".encode()) + 25
 
     def test_reset_tx_channel_name(self) -> None:
-        frame, seq_id = build_reset_tx_channel_name(2, seq_id=0x4444)
+        """Verify reset TX channel name frame layout."""
+        frame, _ = build_reset_tx_channel_name(2, seq_id=0x4444)
         assert frame[3] == 25  # 0x19
         assert frame[6:8] == struct.pack(">H", ArcCommand.SET_TX_CHANNEL_NAME)
 
     def test_set_rx_channel_name(self) -> None:
-        frame, seq_id = build_set_rx_channel_name(3, "Input 3", seq_id=0x5555)
+        """Verify set RX channel name frame contains name and correct length."""
+        frame, _ = build_set_rx_channel_name(3, "Input 3", seq_id=0x5555)
         assert frame[6:8] == struct.pack(">H", ArcCommand.SET_RX_CHANNEL_NAME)
         assert b"Input 3" in frame
         assert frame[3] == len("Input 3".encode()) + 21
 
     def test_reset_rx_channel_name(self) -> None:
-        frame, seq_id = build_reset_rx_channel_name(4, seq_id=0x6666)
+        """Verify reset RX channel name frame layout."""
+        frame, _ = build_reset_rx_channel_name(4, seq_id=0x6666)
         assert frame[3] == 21  # 0x15
         assert frame[6:8] == struct.pack(">H", ArcCommand.SET_RX_CHANNEL_NAME)
 
     def test_add_subscription(self) -> None:
-        frame, seq_id = build_add_subscription(1, "TX-01", "DeviceA", seq_id=0x7777)
+        """Verify add subscription frame payload structure."""
+        frame, _ = build_add_subscription(1, "TX-01", "DeviceA", seq_id=0x7777)
         assert frame[6:8] == struct.pack(">H", ArcCommand.ADD_SUBSCRIPTION)
         assert b"TX-01" in frame
         assert b"DeviceA" in frame
@@ -118,14 +130,16 @@ class TestArcFrameBuilders:
         assert frame[56:64] == b"DeviceA\x00"
 
     def test_remove_subscription(self) -> None:
-        frame, seq_id = build_remove_subscription(2, seq_id=0x8888)
+        """Verify remove subscription frame layout."""
+        frame, _ = build_remove_subscription(2, seq_id=0x8888)
         assert frame[3] == 16  # 0x10
         assert frame[6:8] == struct.pack(">H", ArcCommand.REMOVE_SUBSCRIPTION)
         # Last byte should be the channel number
         assert frame[-1] == 2
 
     def test_set_latency(self) -> None:
-        frame, seq_id = build_set_latency(1000, seq_id=0x9999)
+        """Verify set latency frame contains latency value twice."""
+        frame, _ = build_set_latency(1000, seq_id=0x9999)
         assert frame[6:8] == struct.pack(">H", ArcCommand.SET_LATENCY)
         assert frame[3] == 40  # 0x28
         # Latency appears twice in the frame
@@ -134,6 +148,7 @@ class TestArcFrameBuilders:
         assert count == 2
 
     def test_seq_id_is_random_when_not_specified(self) -> None:
+        """Verify auto-generated seq_ids are in valid range."""
         _, seq1 = build_device_name_query()
         _, seq2 = build_device_name_query()
         # There's a 1/65536 chance this fails, which is acceptable
@@ -146,6 +161,7 @@ class TestArcResponseParsers:
     """Test ARC response parsing."""
 
     def test_parse_device_name(self) -> None:
+        """Verify device name is extracted from response bytes."""
         # Build a mock response: 10 bytes header + name + null
         header = bytes(10)
         name = b"TestDevice\x00"
@@ -154,6 +170,7 @@ class TestArcResponseParsers:
         assert result == "TestDevice"
 
     def test_parse_channel_counts(self) -> None:
+        """Verify TX and RX counts are parsed from correct byte offsets."""
         # Build a mock response with tx=4 at byte 13, rx=2 at byte 15
         response = bytearray(16)
         response[13] = 4
@@ -218,7 +235,7 @@ class TestArcResponseParsers:
         response[0x48 : 0x48 + len(tx_dev)] = tx_dev
         response[0x50 : 0x50 + len(rx_ch)] = rx_ch
 
-        channels, subs, sr = parse_rx_channels(bytes(response), "MyDevice", 1)
+        channels, subs, _ = parse_rx_channels(bytes(response), "MyDevice", 1)
 
         assert 1 in channels
         assert channels[1].name == "RX-01"
@@ -274,6 +291,7 @@ class TestGetLabel:
     """Test the get_label helper."""
 
     def test_basic_extraction(self) -> None:
+        """Verify label extraction from offset 0."""
         # "Hello\x00World" in hex
         data = b"Hello\x00World\x00"
         hex_str = data.hex()
@@ -281,17 +299,20 @@ class TestGetLabel:
         assert get_label(hex_str, "0000") == "Hello"
 
     def test_offset_extraction(self) -> None:
+        """Verify label extraction from non-zero offset."""
         data = b"\x00\x00\x00\x00Test\x00"
         hex_str = data.hex()
         # offset 4 (0x0004) should give "Test"
         assert get_label(hex_str, "0004") == "Test"
 
     def test_empty_string(self) -> None:
+        """Verify empty string extraction from null byte."""
         data = b"\x00"
         hex_str = data.hex()
         assert get_label(hex_str, "0000") == ""
 
     def test_out_of_bounds(self) -> None:
+        """Verify out-of-bounds offset returns empty string."""
         data = b"AB"
         hex_str = data.hex()
         assert get_label(hex_str, "00ff") == ""

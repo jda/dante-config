@@ -200,7 +200,7 @@ def parse_channel_counts(response: bytes) -> tuple[int, int]:
     return tx_count, rx_count
 
 
-def parse_tx_channels(
+def parse_tx_channels(  # pylint: disable=too-many-locals
     response: bytes,
     tx_count: int,
     existing_friendly_names: dict[int, str] | None = None,
@@ -292,7 +292,7 @@ def parse_tx_friendly_names(response: bytes) -> dict[int, str]:
     return names
 
 
-def parse_rx_channels(
+def parse_rx_channels(  # pylint: disable=too-many-locals
     response: bytes,
     device_name: str,
     rx_count: int,
