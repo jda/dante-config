@@ -33,8 +33,10 @@ Two independent UDP binary protocols communicate with each Dante device:
 DanteClient (client.py)          — High-level async API, orchestrates both protocols
     ├── protocol/arc.py          — ARC frame builders + response parsers
     ├── protocol/settings.py     — Settings frame builders + response parsers
-    └── protocol/common.py       — Shared: build_arc_frame(), build_settings_frame(), get_label()
+    └── protocol/common.py       — Shared: build_arc_frame(), build_settings_frame(), get_label(), mac_str_to_bytes()
 DanteUDPProtocol (transport.py)  — asyncio.DatagramProtocol, request/response matching
+DanteMulticastProtocol (transport.py) — Multicast listener; delivers Settings responses via deliver_response()
+    Factory: create_dante_transport(), create_multicast_listener()
 DanteBrowser (discovery.py)      — mDNS browser over zeroconf (4 service types), builds DanteDeviceInfo
 models.py                        — Dataclasses: DanteDeviceInfo, DanteChannel, DanteSubscription, DanteServiceRecord
 const.py                         — Enums (ArcCommand, SettingsCommand, SubscriptionStatus, Encoding), ports, magic bytes
@@ -59,7 +61,7 @@ exceptions.py                    — DanteError hierarchy (Connection, Timeout, 
 
 ## Testing
 
-Tests use `unittest.mock` exclusively — no real network calls. Test files mirror source modules (`test_protocol_arc.py`, `test_protocol_settings.py`, `test_client.py`, `test_discovery.py`, `test_models.py`).
+Tests use `unittest.mock` exclusively — no real network calls. Test files mirror source modules (`test_protocol_arc.py`, `test_protocol_settings.py`, `test_client.py`, `test_transport.py`, `test_discovery.py`, `test_models.py`).
 
 ## Tool config
 
