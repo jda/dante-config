@@ -13,7 +13,7 @@ pip install dante-config
 Or from source:
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/jda/dante-config.git
 cd dante-config
 pip install .
 ```
@@ -42,6 +42,14 @@ black .        # format
 mypy src/      # type check (strict mode)
 ```
 
+## Contributing
+
+Issues and pull requests welcome at https://github.com/jda/dante-config/issues. This is a small project — open an issue to discuss larger changes before sending a PR.
+
 ## License
 
 MIT
+
+## Trademarks
+
+Dante is a registered trademark of Audinate Group Pty Ltd. This project is not affiliated with or endorsed by Audinate.

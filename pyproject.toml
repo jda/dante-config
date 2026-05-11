@@ -8,9 +8,33 @@ version = "0.1.0"
 description = "Async Python library for configuration of Dante audio networking devices"
 requires-python = ">=3.11"
 license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
     "zeroconf>=0.80.0",
 ]
+authors = [
+    {name = "Jade Auer", email = "jade@jade.wtf"},
+]
+readme = "README.md"
+keywords = ["dante", "audinate", "audio", "networking", "mdns", "asyncio"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: System :: Networking",
+]
+
+[project.urls]
+Homepage = "https://github.com/jda/dante-config"
+Repository = "https://github.com/jda/dante-config"
+Issues = "https://github.com/jda/dante-config/issues"
 
 [project.optional-dependencies]
 cli = [
